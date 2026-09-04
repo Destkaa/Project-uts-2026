@@ -1,14 +1,7 @@
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
 
+// Plugin Vue memberitahu Vite cara membaca file .vue
 export default defineConfig({
-    plugins: [
-        laravel({
-            input: [
-                'resources/sass/app.scss',
-                'resources/js/app.js',
-            ],
-            refresh: true,
-        }),
-    ],
-});
+  plugins: [vue()],
+})
