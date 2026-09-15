@@ -46,6 +46,7 @@
               <div class="book-cover">
                 <span>📖</span>
               </div>
+
               <div class="book-info">
                 <strong>Atomic Habits</strong>
                 <small>James Clear</small>
@@ -56,6 +57,7 @@
               <div class="book-cover purple">
                 <span>🧠</span>
               </div>
+
               <div class="book-info">
                 <strong>Deep Work</strong>
                 <small>Cal Newport</small>
@@ -66,6 +68,7 @@
               <div class="book-cover green">
                 <span>🚀</span>
               </div>
+
               <div class="book-info">
                 <strong>Start With Why</strong>
                 <small>Simon Sinek</small>
@@ -76,6 +79,7 @@
 
           <div class="quote">
             <div class="quote-line"></div>
+
             <p>
               "Satu buku, satu ide, bisa mengubah
               cara kita melihat dunia."
@@ -97,45 +101,74 @@
 
         <div class="login-card">
 
+          <!-- MOBILE LOGO -->
           <div class="mobile-logo">
             <div class="brand-icon">
               📚
             </div>
-            <h2>Perpus<span>Ku</span></h2>
+
+            <h2>
+              Perpus<span>Ku</span>
+            </h2>
           </div>
 
+
+          <!-- HEADER -->
           <div class="form-header">
+
             <div class="welcome-icon">
               👋
             </div>
 
             <div>
-              <p class="small-title">SELAMAT DATANG KEMBALI</p>
+              <p class="small-title">
+                SELAMAT DATANG KEMBALI
+              </p>
+
               <h2>Masuk ke akunmu</h2>
+
               <p>
                 Silakan masuk untuk melanjutkan.
               </p>
             </div>
+
           </div>
 
 
-          <!-- FORM -->
+          <!-- ================= FORM ================= -->
           <form @submit.prevent="login">
+
+            <!-- ERROR -->
+            <div
+              v-if="errorMessage"
+              class="login-error"
+            >
+              <span>⚠️</span>
+              <span>{{ errorMessage }}</span>
+            </div>
+
 
             <!-- EMAIL -->
             <div class="form-group">
+
               <label>Email</label>
 
               <div class="input-wrapper">
-                <span class="input-icon">✉</span>
+
+                <span class="input-icon">
+                  ✉
+                </span>
 
                 <input
                   v-model="email"
                   type="email"
                   placeholder="nama@email.com"
                   required
+                  autocomplete="email"
                 />
+
               </div>
+
             </div>
 
 
@@ -143,22 +176,30 @@
             <div class="form-group">
 
               <div class="label-row">
+
                 <label>Password</label>
 
-                <a href="#" @click.prevent>
+                <a
+                  href="#"
+                  @click.prevent
+                >
                   Lupa password?
                 </a>
+
               </div>
 
               <div class="input-wrapper">
 
-                <span class="input-icon">🔒</span>
+                <span class="input-icon">
+                  🔒
+                </span>
 
                 <input
                   v-model="password"
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="Masukkan password"
                   required
+                  autocomplete="current-password"
                 />
 
                 <button
@@ -170,6 +211,7 @@
                 </button>
 
               </div>
+
             </div>
 
 
@@ -177,6 +219,7 @@
             <div class="remember-row">
 
               <label class="checkbox">
+
                 <input
                   v-model="remember"
                   type="checkbox"
@@ -185,45 +228,42 @@
                 <span class="checkmark"></span>
 
                 <span>Ingat saya</span>
+
               </label>
 
             </div>
 
 
             <!-- LOGIN BUTTON -->
-            <button class="login-button" type="submit">
-
-              <span>Masuk ke PerpusKu</span>
-
-              <span class="arrow">→</span>
-
-            </button>
-
-
-            <!-- DIVIDER -->
-            <div class="divider">
-              <span>atau</span>
-            </div>
-
-
-            <!-- DEMO LOGIN -->
             <button
-              type="button"
-              class="demo-button"
-              @click="demoLogin"
+              class="login-button"
+              type="submit"
+              :disabled="loading"
             >
-              <span class="demo-icon">⚡</span>
-              Masuk dengan akun demo
+
+              <span>
+                {{ loading ? 'Sedang masuk...' : 'Masuk ke PerpusKu' }}
+              </span>
+
+              <span class="arrow">
+                {{ loading ? '•••' : '→' }}
+              </span>
+
             </button>
 
 
             <!-- REGISTER -->
             <div class="register-text">
+
               Belum punya akun?
 
-              <a href="#" @click.prevent>
+              <a
+                href="#"
+                @click.prevent="goToRegister"
+              >
                 Daftar sekarang
               </a>
+
             </div>
 
           </form>
@@ -235,8 +275,15 @@
             <span>🔐</span>
 
             <div>
-              <strong>Data kamu aman</strong>
-              <p>Informasi akun terlindungi dengan sistem keamanan.</p>
+
+              <strong>
+                Data kamu aman
+              </strong>
+
+              <p>
+                Informasi akun terlindungi dengan sistem keamanan.
+              </p>
+
             </div>
 
           </div>
@@ -252,32 +299,239 @@
 
 
 <script setup>
-
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../utils/api'
+
+const router = useRouter()
+
+
+// =========================
+// FORM
+// =========================
 
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
 const showPassword = ref(false)
 
-function login() {
 
-  console.log({
-    email: email.value,
-    password: password.value,
-    remember: remember.value
-  })
+// =========================
+// STATE
+// =========================
 
-  alert(`Login berhasil!\n\nEmail: ${email.value}`)
+const loading = ref(false)
+const errorMessage = ref('')
+
+
+// =========================
+// LOGIN
+// =========================
+
+async function login() {
+
+  errorMessage.value = ''
+
+  // Cegah double click
+  if (loading.value) {
+    return
+  }
+
+  loading.value = true
+
+  try {
+
+    console.log('Mengirim login...')
+    console.log('Email:', email.value)
+
+
+    // =========================
+    // REQUEST KE LARAVEL
+    // =========================
+
+    const response = await api.post('/login', {
+      email: email.value,
+      password: password.value
+    })
+
+
+    console.log('Response Laravel:')
+    console.log(response.data)
+
+    const data = response.data
+
+
+    // =========================
+    // CEK TOKEN
+    // =========================
+
+    if (!data.token) {
+
+      errorMessage.value =
+        'Login berhasil tetapi token tidak ditemukan.'
+
+      return
+    }
+
+
+    // =========================
+    // SIMPAN TOKEN
+    // =========================
+
+    localStorage.setItem(
+      'token',
+      data.token
+    )
+
+
+    // =========================
+    // SIMPAN USER
+    // =========================
+
+    if (data.user) {
+
+      localStorage.setItem(
+        'user',
+        JSON.stringify(data.user)
+      )
+
+    }
+
+
+    console.log('Token berhasil disimpan')
+    console.log('User:', data.user)
+
+
+    // =========================
+    // REDIRECT BERDASARKAN ROLE
+    // =========================
+
+    if (data.user?.role === 'admin') {
+
+      console.log('Login sebagai ADMIN')
+
+      await router.push('/admin/Dashboard')
+
+    } else {
+
+      console.log('Login sebagai USER')
+
+      await router.push('/')
+
+    }
+
+
+  } catch (error) {
+
+    console.error('LOGIN ERROR:', error)
+
+
+    // =========================
+    // ERROR DARI LARAVEL
+    // =========================
+
+    if (error.response) {
+
+      console.log(
+        'Status:',
+        error.response.status
+      )
+
+      console.log(
+        'Data:',
+        error.response.data
+      )
+
+
+      // 422 validation
+      if (error.response.status === 422) {
+
+        const errors =
+          error.response.data?.errors
+
+        if (errors?.email) {
+
+          errorMessage.value =
+            errors.email[0]
+
+        } else if (errors?.password) {
+
+          errorMessage.value =
+            errors.password[0]
+
+        } else {
+
+          errorMessage.value =
+            'Email atau password tidak valid.'
+
+        }
+
+      }
+
+
+      // 401 unauthorized
+      else if (error.response.status === 401) {
+
+        errorMessage.value =
+          'Email atau password salah.'
+
+      }
+
+
+      // Error lainnya
+      else if (error.response.data?.message) {
+
+        errorMessage.value =
+          error.response.data.message
+
+      }
+
+
+      else {
+
+        errorMessage.value =
+          'Terjadi kesalahan pada server.'
+
+      }
+
+    }
+
+
+    // =========================
+    // SERVER TIDAK TERHUBUNG
+    // =========================
+
+    else if (error.request) {
+
+      errorMessage.value =
+        'Tidak dapat terhubung ke server Laravel. Pastikan php artisan serve sedang berjalan.'
+
+    }
+
+
+    else {
+
+      errorMessage.value =
+        'Terjadi kesalahan. Silakan coba lagi.'
+
+    }
+
+  } finally {
+
+    loading.value = false
+
+  }
+
 }
 
-function demoLogin() {
 
-  email.value = 'admin@perpusku.com'
-  password.value = 'password123'
+// =========================
+// REGISTER
+// =========================
 
+function goToRegister() {
+  router.push('/register')
 }
-
 </script>
 
 
@@ -291,7 +545,13 @@ function demoLogin() {
   box-sizing: border-box;
 }
 
+
+/* =========================
+   LOGIN PAGE
+========================= */
+
 .login-page {
+
   min-height: 100vh;
   width: 100%;
   position: relative;
@@ -332,9 +592,9 @@ function demoLogin() {
 ========================= */
 
 .grid-bg {
+
   position: absolute;
   inset: 0;
-
   opacity: .18;
 
   background-image:
@@ -351,14 +611,18 @@ function demoLogin() {
   background-size: 55px 55px;
 }
 
+
 .orb {
+
   position: absolute;
   border-radius: 50%;
   filter: blur(2px);
   pointer-events: none;
 }
 
+
 .orb-1 {
+
   width: 320px;
   height: 320px;
 
@@ -373,7 +637,9 @@ function demoLogin() {
     );
 }
 
+
 .orb-2 {
+
   width: 400px;
   height: 400px;
 
@@ -394,8 +660,8 @@ function demoLogin() {
 ========================= */
 
 .login-wrapper {
-  width: min(1180px, 100%);
 
+  width: min(1180px, 100%);
   min-height: 700px;
 
   display: grid;
@@ -407,7 +673,6 @@ function demoLogin() {
   overflow: hidden;
 
   border-radius: 30px;
-
   border: 1px solid rgba(255,255,255,.12);
 
   background:
@@ -426,6 +691,7 @@ function demoLogin() {
 ========================= */
 
 .visual-side {
+
   position: relative;
 
   padding: 46px;
@@ -444,9 +710,8 @@ function demoLogin() {
 }
 
 
-/* decorative circle */
-
 .visual-side::before {
+
   content: "";
 
   position: absolute;
@@ -466,7 +731,9 @@ function demoLogin() {
     0 0 0 140px rgba(255,255,255,.018);
 }
 
+
 .visual-side::after {
+
   content: "";
 
   position: absolute;
@@ -491,6 +758,7 @@ function demoLogin() {
 ========================= */
 
 .brand {
+
   display: flex;
   align-items: center;
   gap: 14px;
@@ -499,7 +767,9 @@ function demoLogin() {
   z-index: 3;
 }
 
+
 .brand-icon {
+
   width: 48px;
   height: 48px;
 
@@ -522,22 +792,30 @@ function demoLogin() {
     0 10px 25px rgba(36,89,175,.35);
 }
 
+
 .brand h2 {
+
   margin: 0;
 
   font-size: 21px;
+
   font-weight: 800;
+
   letter-spacing: -.5px;
 }
+
 
 .brand h2 span {
   color: #79aaff;
 }
 
+
 .brand p {
+
   margin: 3px 0 0;
 
   font-size: 9px;
+
   letter-spacing: 3px;
 
   color: #7f95b7;
@@ -549,13 +827,16 @@ function demoLogin() {
 ========================= */
 
 .visual-content {
+
   position: relative;
   z-index: 3;
 
   margin-top: 90px;
 }
 
+
 .badge {
+
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -576,7 +857,9 @@ function demoLogin() {
   backdrop-filter: blur(10px);
 }
 
+
 .badge-dot {
+
   width: 7px;
   height: 7px;
 
@@ -590,6 +873,7 @@ function demoLogin() {
 
 
 .visual-content h1 {
+
   max-width: 500px;
 
   margin: 22px 0 15px;
@@ -603,7 +887,9 @@ function demoLogin() {
   font-weight: 800;
 }
 
+
 .visual-content h1 span {
+
   display: block;
 
   background:
@@ -617,7 +903,9 @@ function demoLogin() {
   -webkit-text-fill-color: transparent;
 }
 
+
 .description {
+
   max-width: 480px;
 
   margin: 0;
@@ -635,6 +923,7 @@ function demoLogin() {
 ========================= */
 
 .floating-books {
+
   position: relative;
 
   height: 150px;
@@ -642,7 +931,9 @@ function demoLogin() {
   margin-top: 38px;
 }
 
+
 .book-card {
+
   position: absolute;
 
   width: 215px;
@@ -666,26 +957,38 @@ function demoLogin() {
     0 15px 30px rgba(0,0,0,.18);
 }
 
+
 .book-one {
+
   left: 0;
   top: 10px;
+
   transform: rotate(-4deg);
 }
 
+
 .book-two {
+
   left: 175px;
   top: 40px;
+
   transform: rotate(4deg);
+
   z-index: 2;
 }
 
+
 .book-three {
+
   left: 350px;
   top: 0;
+
   transform: rotate(-3deg);
 }
 
+
 .book-cover {
+
   width: 43px;
   height: 58px;
 
@@ -707,7 +1010,9 @@ function demoLogin() {
     );
 }
 
+
 .book-cover.purple {
+
   background:
     linear-gradient(
       145deg,
@@ -716,7 +1021,9 @@ function demoLogin() {
     );
 }
 
+
 .book-cover.green {
+
   background:
     linear-gradient(
       145deg,
@@ -725,18 +1032,24 @@ function demoLogin() {
     );
 }
 
+
 .book-info {
+
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
+
 .book-info strong {
+
   font-size: 12px;
   color: white;
 }
 
+
 .book-info small {
+
   color: #8298b9;
   font-size: 10px;
 }
@@ -747,8 +1060,8 @@ function demoLogin() {
 ========================= */
 
 .quote {
-  display: flex;
 
+  display: flex;
   gap: 14px;
 
   margin-top: 22px;
@@ -756,7 +1069,9 @@ function demoLogin() {
   max-width: 440px;
 }
 
+
 .quote-line {
+
   width: 3px;
 
   border-radius: 5px;
@@ -768,7 +1083,9 @@ function demoLogin() {
     );
 }
 
+
 .quote p {
+
   margin: 0;
 
   color: #7189ab;
@@ -786,6 +1103,7 @@ function demoLogin() {
 ========================= */
 
 .visual-footer {
+
   position: absolute;
 
   bottom: 35px;
@@ -800,8 +1118,11 @@ function demoLogin() {
   letter-spacing: 1px;
 }
 
+
 .visual-footer span {
+
   color: #78aaff;
+
   margin-right: 7px;
 }
 
@@ -811,6 +1132,7 @@ function demoLogin() {
 ========================= */
 
 .form-side {
+
   position: relative;
 
   display: flex;
@@ -824,9 +1146,8 @@ function demoLogin() {
 }
 
 
-/* glass line */
-
 .form-side::before {
+
   content: "";
 
   position: absolute;
@@ -851,6 +1172,7 @@ function demoLogin() {
 ========================= */
 
 .login-card {
+
   width: 100%;
   max-width: 410px;
 }
@@ -861,13 +1183,16 @@ function demoLogin() {
 ========================= */
 
 .form-header {
+
   display: flex;
   gap: 15px;
 
   margin-bottom: 38px;
 }
 
+
 .welcome-icon {
+
   width: 48px;
   height: 48px;
 
@@ -887,7 +1212,9 @@ function demoLogin() {
   font-size: 20px;
 }
 
+
 .small-title {
+
   margin: 0 0 6px;
 
   color: #6f9fe8;
@@ -899,7 +1226,9 @@ function demoLogin() {
   letter-spacing: 2px;
 }
 
+
 .form-header h2 {
+
   margin: 0;
 
   color: #f3f6fb;
@@ -909,10 +1238,39 @@ function demoLogin() {
   letter-spacing: -.8px;
 }
 
+
 .form-header > div:last-child > p:last-child {
+
   margin: 7px 0 0;
 
   color: #71829d;
+
+  font-size: 12px;
+}
+
+
+/* =========================
+   ERROR
+========================= */
+
+.login-error {
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-bottom: 20px;
+
+  padding: 12px 14px;
+
+  border-radius: 11px;
+
+  border: 1px solid rgba(255,100,100,.20);
+
+  background:
+    rgba(255,70,70,.08);
+
+  color: #ff9b9b;
 
   font-size: 12px;
 }
@@ -926,8 +1284,10 @@ function demoLogin() {
   margin-bottom: 22px;
 }
 
+
 .form-group label,
 .label-row label {
+
   display: block;
 
   margin-bottom: 9px;
@@ -939,23 +1299,29 @@ function demoLogin() {
   font-weight: 600;
 }
 
+
 .label-row {
+
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+
 .label-row label {
   margin-bottom: 9px;
 }
 
+
 .label-row a {
+
   color: #6699eb;
 
   font-size: 11px;
 
   text-decoration: none;
 }
+
 
 .label-row a:hover {
   color: #8bb7ff;
@@ -967,6 +1333,7 @@ function demoLogin() {
 ========================= */
 
 .input-wrapper {
+
   height: 54px;
 
   position: relative;
@@ -984,7 +1351,9 @@ function demoLogin() {
   transition: .25s;
 }
 
+
 .input-wrapper:focus-within {
+
   border-color: rgba(91,143,232,.7);
 
   background:
@@ -995,7 +1364,9 @@ function demoLogin() {
     0 10px 30px rgba(0,0,0,.1);
 }
 
+
 .input-icon {
+
   width: 50px;
 
   display: flex;
@@ -1007,7 +1378,9 @@ function demoLogin() {
   font-size: 15px;
 }
 
+
 .input-wrapper input {
+
   width: 100%;
   height: 100%;
 
@@ -1021,12 +1394,16 @@ function demoLogin() {
   font-size: 13px;
 }
 
+
 .input-wrapper input::placeholder {
   color: #53647e;
 }
 
+
 .password-toggle {
+
   border: none;
+
   background: transparent;
 
   padding: 12px;
@@ -1038,6 +1415,7 @@ function demoLogin() {
   font-size: 14px;
 }
 
+
 .password-toggle:hover {
   opacity: 1;
 }
@@ -1048,12 +1426,14 @@ function demoLogin() {
 ========================= */
 
 .remember-row {
+
   margin: 3px 0 24px;
 }
 
-.checkbox {
-  display: inline-flex;
 
+.checkbox {
+
+  display: inline-flex;
   align-items: center;
 
   gap: 9px;
@@ -1065,11 +1445,14 @@ function demoLogin() {
   cursor: pointer;
 }
 
+
 .checkbox input {
   display: none;
 }
 
+
 .checkmark {
+
   width: 16px;
   height: 16px;
 
@@ -1082,7 +1465,9 @@ function demoLogin() {
   transition: .2s;
 }
 
+
 .checkbox input:checked + .checkmark {
+
   background: #477bd0;
 
   border-color: #477bd0;
@@ -1097,6 +1482,7 @@ function demoLogin() {
 ========================= */
 
 .login-button {
+
   width: 100%;
   height: 55px;
 
@@ -1114,6 +1500,7 @@ function demoLogin() {
   color: white;
 
   font-size: 13px;
+
   font-weight: 700;
 
   background:
@@ -1129,19 +1516,34 @@ function demoLogin() {
   transition: .25s;
 }
 
-.login-button:hover {
+
+.login-button:hover:not(:disabled) {
+
   transform: translateY(-2px);
 
   box-shadow:
     0 16px 35px rgba(45,92,166,.4);
 }
 
+
 .login-button:active {
   transform: translateY(0);
 }
 
+
+.login-button:disabled {
+
+  opacity: .65;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+
 .arrow {
-  width: 31px;
+
+  min-width: 31px;
   height: 31px;
 
   display: flex;
@@ -1152,83 +1554,7 @@ function demoLogin() {
 
   background: rgba(255,255,255,.13);
 
-  font-size: 17px;
-}
-
-
-/* =========================
-   DIVIDER
-========================= */
-
-.divider {
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-
-  margin: 27px 0;
-
-  color: #53637c;
-
-  font-size: 10px;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-
-  flex: 1;
-
-  height: 1px;
-
-  background:
-    rgba(255,255,255,.08);
-}
-
-
-/* =========================
-   DEMO BUTTON
-========================= */
-
-.demo-button {
-  width: 100%;
-  height: 52px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 9px;
-
-  border-radius: 12px;
-
-  border: 1px solid rgba(255,255,255,.09);
-
-  background:
-    rgba(255,255,255,.035);
-
-  color: #aab9cf;
-
-  cursor: pointer;
-
-  font-size: 12px;
-  font-weight: 600;
-
-  transition: .25s;
-}
-
-.demo-button:hover {
-  background:
-    rgba(255,255,255,.065);
-
-  border-color:
-    rgba(255,255,255,.15);
-
-  color: white;
-}
-
-.demo-icon {
-  color: #e6b94e;
+  font-size: 14px;
 }
 
 
@@ -1237,6 +1563,7 @@ function demoLogin() {
 ========================= */
 
 .register-text {
+
   text-align: center;
 
   margin-top: 26px;
@@ -1246,7 +1573,9 @@ function demoLogin() {
   font-size: 11px;
 }
 
+
 .register-text a {
+
   margin-left: 4px;
 
   color: #6ea0f2;
@@ -1255,6 +1584,7 @@ function demoLogin() {
 
   font-weight: 700;
 }
+
 
 .register-text a:hover {
   text-decoration: underline;
@@ -1266,6 +1596,7 @@ function demoLogin() {
 ========================= */
 
 .security-info {
+
   display: flex;
   align-items: center;
 
@@ -1283,11 +1614,14 @@ function demoLogin() {
     rgba(80,120,190,.045);
 }
 
+
 .security-info > span {
   font-size: 15px;
 }
 
+
 .security-info strong {
+
   display: block;
 
   color: #8298b7;
@@ -1295,7 +1629,9 @@ function demoLogin() {
   font-size: 10px;
 }
 
+
 .security-info p {
+
   margin: 2px 0 0;
 
   color: #53647d;
@@ -1324,6 +1660,7 @@ function demoLogin() {
   }
 
   .login-wrapper {
+
     grid-template-columns: 1fr;
 
     min-height: auto;
@@ -1344,8 +1681,8 @@ function demoLogin() {
   }
 
   .mobile-logo {
-    display: flex;
 
+    display: flex;
     align-items: center;
     justify-content: center;
 
@@ -1355,6 +1692,7 @@ function demoLogin() {
   }
 
   .mobile-logo .brand-icon {
+
     width: 42px;
     height: 42px;
 
@@ -1362,6 +1700,7 @@ function demoLogin() {
   }
 
   .mobile-logo h2 {
+
     color: white;
 
     font-size: 20px;
@@ -1380,6 +1719,7 @@ function demoLogin() {
   }
 
   .login-wrapper {
+
     border-radius: 0;
 
     min-height: 100vh;
@@ -1394,7 +1734,6 @@ function demoLogin() {
   .form-header h2 {
     font-size: 24px;
   }
-
 }
 
 </style>

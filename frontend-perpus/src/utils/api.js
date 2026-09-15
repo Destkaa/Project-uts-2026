@@ -1,16 +1,20 @@
 import axios from 'axios'
 
-// Buat instance axios dengan base URL API Laravel
 const api = axios.create({
-  baseURL: '<http://localhost:8000/api>',
+  baseURL: 'http://localhost:8000/api',
+  headers: {
+    Accept: 'application/json',
+  },
 })
 
-// Interceptor: otomatis tambahkan token di setiap request
+// Kalau ada token, otomatis dikirim
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
   return config
 })
 
