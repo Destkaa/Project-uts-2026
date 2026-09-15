@@ -8,26 +8,34 @@ use Illuminate\Http\Request;
 
 class BukuController extends Controller
 {
+    // GET SEMUA BUKU + SEARCH + FILTER
     public function index(Request $request)
     {
         $query = Buku::with('kategori:id,nama');
 
+        // Search judul atau penulis
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('judul', 'like', '%'.$request->search.'%')
-                  ->orWhere('penulis', 'like', '%'.$request->search.'%');
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', '%' . $search . '%')
+                    ->orWhere('penulis', 'like', '%' . $search . '%');
             });
         }
 
+        // Hanya buku yang stoknya tersedia
         if ($request->filled('stok')) {
             $query->where('stok', '>', 0);
         }
 
+        // Filter kategori
         if ($request->filled('kategori_id')) {
             $query->where('kategori_id', $request->kategori_id);
         }
 
-        $bukus = $query->latest()->paginate($request->get('per_page', 10));
+        $bukus = $query
+            ->latest()
+            ->paginate($request->get('per_page', 10));
 
         return response()->json([
             'status' => true,
@@ -36,62 +44,69 @@ class BukuController extends Controller
         ]);
     }
 
+    // POST TAMBAH BUKU
     public function store(Request $request)
     {
         $data = $request->validate([
             'kategori_id' => 'nullable|exists:kategoris,id',
-            'judul'       => 'required|string|max:255',
-            'penulis'     => 'required|string|max:255',
-            'stok'        => 'required|integer|min:0',
-            'deskripsi'   => 'nullable|string',
-            'gambar'      => 'nullable|string',
+            'judul' => 'required|string|max:255',
+            'penulis' => 'required|string|max:255',
+            'stok' => 'required|integer|min:0',
+            'deskripsi' => 'nullable|string',
+            'gambar' => 'nullable|string',
         ]);
 
         $buku = Buku::create($data);
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Buku berhasil ditambahkan.',
-            'data'    => $buku->load('kategori:id,nama'),
+            'data' => $buku->load('kategori:id,nama'),
         ], 201);
     }
 
+    // GET DETAIL BUKU
     public function show(Buku $buku)
     {
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Detail buku ditemukan.',
-            'data'    => $buku->load(['kategori:id,nama', 'detailPeminjaman']),
+            'data' => $buku->load([
+                'kategori:id,nama',
+                'peminjaman.user:id,name',
+            ]),
         ]);
     }
 
+    // PUT UPDATE BUKU
     public function update(Request $request, Buku $buku)
     {
         $data = $request->validate([
             'kategori_id' => 'nullable|exists:kategoris,id',
-            'judul'       => 'sometimes|required|string|max:255',
-            'penulis'     => 'sometimes|required|string|max:255',
-            'stok'        => 'sometimes|required|integer|min:0',
-            'deskripsi'   => 'nullable|string',
-            'gambar'      => 'nullable|string',
+            'judul' => 'sometimes|required|string|max:255',
+            'penulis' => 'sometimes|required|string|max:255',
+            'stok' => 'sometimes|required|integer|min:0',
+            'deskripsi' => 'nullable|string',
+            'gambar' => 'nullable|string',
         ]);
 
         $buku->update($data);
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Buku berhasil diperbarui.',
-            'data'    => $buku->load('kategori:id,nama'),
+            'data' => $buku->load('kategori:id,nama'),
         ]);
     }
 
+    // DELETE BUKU
     public function destroy(Buku $buku)
     {
         $buku->delete();
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Buku berhasil dihapus.'
+            'status' => true,
+            'message' => 'Buku berhasil dihapus.',
         ]);
     }
 }
