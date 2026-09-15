@@ -29,7 +29,11 @@ class BukuController extends Controller
 
         $bukus = $query->latest()->paginate($request->get('per_page', 10));
 
-        return response()->json($bukus);
+        return response()->json([
+            'status' => true,
+            'message' => 'Daftar buku berhasil diambil.',
+            'data' => $bukus
+        ]);
     }
 
     public function store(Request $request)
@@ -46,6 +50,7 @@ class BukuController extends Controller
         $buku = Buku::create($data);
 
         return response()->json([
+            'status'  => true,
             'message' => 'Buku berhasil ditambahkan.',
             'data'    => $buku->load('kategori:id,nama'),
         ], 201);
@@ -53,7 +58,11 @@ class BukuController extends Controller
 
     public function show(Buku $buku)
     {
-        return response()->json($buku->load(['kategori:id,nama', 'detailPeminjaman']));
+        return response()->json([
+            'status'  => true,
+            'message' => 'Detail buku ditemukan.',
+            'data'    => $buku->load(['kategori:id,nama', 'detailPeminjaman']),
+        ]);
     }
 
     public function update(Request $request, Buku $buku)
@@ -70,6 +79,7 @@ class BukuController extends Controller
         $buku->update($data);
 
         return response()->json([
+            'status'  => true,
             'message' => 'Buku berhasil diperbarui.',
             'data'    => $buku->load('kategori:id,nama'),
         ]);
@@ -77,8 +87,11 @@ class BukuController extends Controller
 
     public function destroy(Buku $buku)
     {
-        $buku->delete(); // Mendukung SoftDeletes sesuai Model
+        $buku->delete();
 
-        return response()->json(['message' => 'Buku berhasil dihapus.']);
+        return response()->json([
+            'status'  => true,
+            'message' => 'Buku berhasil dihapus.'
+        ]);
     }
 }

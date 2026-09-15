@@ -24,9 +24,10 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
+            'status'  => true,
             'message' => 'Registrasi berhasil.',
             'token'   => $token,
             'user'    => [
@@ -52,9 +53,10 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([
+            'status'  => true,
             'message' => 'Login berhasil.',
             'token'   => $token,
             'user'    => [
@@ -67,20 +69,28 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Menghapus token yang sedang digunakan saat ini
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'Logout berhasil.']);
+        return response()->json([
+            'status'  => true,
+            'message' => 'Logout berhasil.',
+        ]);
     }
 
     public function me(Request $request)
     {
+        // Mengambil data user beserta relasi profile
         $user = $request->user()->load('profile');
 
         return response()->json([
-            'id'      => $user->id,
-            'name'    => $user->name,
-            'email'   => $user->email,
-            'profile' => $user->profile,
+            'status' => true,
+            'data'   => [
+                'id'      => $user->id,
+                'name'    => $user->name,
+                'email'   => $user->email,
+                'profile' => $user->profile,
+            ],
         ]);
     }
 }
