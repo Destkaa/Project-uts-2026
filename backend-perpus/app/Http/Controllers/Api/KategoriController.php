@@ -11,11 +11,12 @@ class KategoriController extends Controller
     // GET /api/kategori
     public function index()
     {
-        $kategori = Kategori::withCount('bukus')->get();
+        $kategori = Kategori::withCount('buku')->get();
 
         return response()->json([
+            'status'  => true,
             'message' => 'Data kategori berhasil diambil.',
-            'data' => $kategori
+            'data'    => $kategori,
         ]);
     }
 
@@ -31,50 +32,48 @@ class KategoriController extends Controller
         ]);
 
         return response()->json([
+            'status'  => true,
             'message' => 'Kategori berhasil ditambahkan.',
-            'data' => $kategori
+            'data'    => $kategori,
         ], 201);
     }
 
-    // GET /api/kategori/{id}
-    public function show($id)
+    // GET /api/kategori/{kategori}
+    public function show(Kategori $kategori)
     {
-        $kategori = Kategori::with('bukus')->findOrFail($id);
-
         return response()->json([
+            'status'  => true,
             'message' => 'Detail kategori berhasil diambil.',
-            'data' => $kategori
+            'data'    => $kategori->load('buku'),
         ]);
     }
 
-    // PUT /api/kategori/{id}
-    public function update(Request $request, $id)
+    // PUT /api/kategori/{kategori}
+    public function update(Request $request, Kategori $kategori)
     {
         $request->validate([
             'nama' => 'required|string|max:255',
         ]);
-
-        $kategori = Kategori::findOrFail($id);
 
         $kategori->update([
             'nama' => $request->nama,
         ]);
 
         return response()->json([
+            'status'  => true,
             'message' => 'Kategori berhasil diperbarui.',
-            'data' => $kategori
+            'data'    => $kategori,
         ]);
     }
 
-    // DELETE /api/kategori/{id}
-    public function destroy($id)
+    // DELETE /api/kategori/{kategori}
+    public function destroy(Kategori $kategori)
     {
-        $kategori = Kategori::findOrFail($id);
-
         $kategori->delete();
 
         return response()->json([
-            'message' => 'Kategori berhasil dihapus.'
+            'status'  => true,
+            'message' => 'Kategori berhasil dihapus.',
         ]);
     }
 }
