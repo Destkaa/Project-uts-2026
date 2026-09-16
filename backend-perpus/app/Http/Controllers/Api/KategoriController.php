@@ -8,71 +8,73 @@ use Illuminate\Http\Request;
 
 class KategoriController extends Controller
 {
-    /**
-     * Menampilkan daftar semua kategori beserta jumlah bukunya.
-     */
+    // GET /api/kategori
     public function index()
     {
+        $kategori = Kategori::withCount('bukus')->get();
+
         return response()->json([
-            'message' => 'Daftar kategori berhasil diambil.',
-            'data'    => Kategori::withCount('bukus')->get()
+            'message' => 'Data kategori berhasil diambil.',
+            'data' => $kategori
         ]);
     }
 
-    /**
-     * Menyimpan kategori baru.
-     */
+    // POST /api/kategori
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'nama' => 'required|string|max:100|unique:kategoris,nama',
+        $request->validate([
+            'nama' => 'required|string|max:255',
         ]);
 
-        $kategori = Kategori::create($data);
+        $kategori = Kategori::create([
+            'nama' => $request->nama,
+        ]);
 
         return response()->json([
             'message' => 'Kategori berhasil ditambahkan.',
-            'data'    => $kategori,
+            'data' => $kategori
         ], 201);
     }
 
-    /**
-     * Menampilkan detail satu kategori beserta daftar bukunya.
-     */
-    public function show(Kategori $kategori)
+    // GET /api/kategori/{id}
+    public function show($id)
     {
+        $kategori = Kategori::with('bukus')->findOrFail($id);
+
         return response()->json([
             'message' => 'Detail kategori berhasil diambil.',
-            'data'    => $kategori->load('bukus'),
+            'data' => $kategori
         ]);
     }
 
-    /**
-     * Memperbarui data kategori.
-     */
-    public function update(Request $request, Kategori $kategori)
+    // PUT /api/kategori/{id}
+    public function update(Request $request, $id)
     {
-        $data = $request->validate([
-            'nama' => 'required|string|max:100|unique:kategoris,nama,' . $kategori->id,
+        $request->validate([
+            'nama' => 'required|string|max:255',
         ]);
 
-        $kategori->update($data);
+        $kategori = Kategori::findOrFail($id);
+
+        $kategori->update([
+            'nama' => $request->nama,
+        ]);
 
         return response()->json([
             'message' => 'Kategori berhasil diperbarui.',
-            'data'    => $kategori,
+            'data' => $kategori
         ]);
     }
 
-    /**
-     * Menghapus kategori.
-     */
-    public function destroy(Kategori $kategori)
+    // DELETE /api/kategori/{id}
+    public function destroy($id)
     {
+        $kategori = Kategori::findOrFail($id);
+
         $kategori->delete();
 
         return response()->json([
-            'message' => 'Kategori berhasil dihapus.',
+            'message' => 'Kategori berhasil dihapus.'
         ]);
     }
 }
