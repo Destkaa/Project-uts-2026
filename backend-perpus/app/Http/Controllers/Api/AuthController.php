@@ -69,7 +69,6 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Menghapus token yang sedang digunakan saat ini
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
@@ -80,7 +79,6 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        // Mengambil data user beserta relasi profile
         $user = $request->user()->load('profile');
 
         return response()->json([

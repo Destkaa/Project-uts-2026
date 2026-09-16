@@ -10,36 +10,35 @@ class BukuController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Buku::with('kategori:id,nama');
+        $query = Buku::with(['kategori:id,nama']);
 
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('judul', 'like', '%'.$request->search.'%')
-                  ->orWhere('penulis', 'like', '%'.$request->search.'%');
-            });
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where('judul', 'like', "%{$search}%")
+                  ->orWhere('penulis', 'like', "%{$search}%");
         }
 
-        if ($request->filled('stok')) {
+        if ($request->has('stok')) {
             $query->where('stok', '>', 0);
         }
 
-        if ($request->filled('kategori_id')) {
+        if ($request->has('kategori_id')) {
             $query->where('kategori_id', $request->kategori_id);
         }
 
-        $bukus = $query->latest()->paginate($request->get('per_page', 10));
+        $buku = $query->latest()->paginate($request->input('per_page', 10));
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Daftar buku berhasil diambil.',
-            'data' => $bukus
+            'data'    => $buku,
         ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kategori_id' => 'nullable|exists:kategoris,id',
+            'kategori_id' => 'nullable|exists:kategori,id',
             'judul'       => 'required|string|max:255',
             'penulis'     => 'required|string|max:255',
             'stok'        => 'required|integer|min:0',
@@ -59,16 +58,15 @@ class BukuController extends Controller
     public function show(Buku $buku)
     {
         return response()->json([
-            'status'  => true,
-            'message' => 'Detail buku ditemukan.',
-            'data'    => $buku->load(['kategori:id,nama', 'detailPeminjaman']),
+            'status' => true,
+            'data'   => $buku->load(['kategori:id,nama', 'peminjaman.user:id,name']),
         ]);
     }
 
     public function update(Request $request, Buku $buku)
     {
         $data = $request->validate([
-            'kategori_id' => 'nullable|exists:kategoris,id',
+            'kategori_id' => 'nullable|exists:kategori,id',
             'judul'       => 'sometimes|required|string|max:255',
             'penulis'     => 'sometimes|required|string|max:255',
             'stok'        => 'sometimes|required|integer|min:0',
@@ -91,7 +89,7 @@ class BukuController extends Controller
 
         return response()->json([
             'status'  => true,
-            'message' => 'Buku berhasil dihapus.'
+            'message' => 'Buku berhasil dihapus.',
         ]);
     }
 }
