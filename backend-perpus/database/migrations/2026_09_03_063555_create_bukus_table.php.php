@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('bukus', function (Blueprint $table) {
             $table->id();
+            $table->string('isbn', 20)->unique()->nullable()->after('id'); // 💡 Ditambahkan untuk fitur ISBN
             $table->string('judul');
             $table->string('penulis');
             $table->foreignId('kategori_id')
