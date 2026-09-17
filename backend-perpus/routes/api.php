@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\PeminjamanController;
 use App\Http\Controllers\Api\DendaController;
 use App\Http\Controllers\Api\ProfileController;
-
+use App\Http\Controllers\Api\KunjunganController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,11 +18,11 @@ use App\Http\Controllers\Api\ProfileController;
 |--------------------------------------------------------------------------
 */
 
-// Tidak perlu login untuk register dan login
+// Public Auth (Bisa digunakan pengunjung untuk daftar / admin tambah anggota)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Auth User
+// Authenticated User
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
@@ -31,11 +31,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| BUKU
+| BUKU (CRUD + IMPORT EXCEL)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/buku/import', [BukuController::class, 'import']);
+    
     Route::get('/buku', [BukuController::class, 'index']);
     Route::post('/buku', [BukuController::class, 'store']);
     Route::get('/buku/{buku}', [BukuController::class, 'show']);
@@ -61,7 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| PROFILE
+| PROFILE & HISTORI
 |--------------------------------------------------------------------------
 */
 
@@ -73,24 +75,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| KERANJANG
+| KERANJANG & WISHLIST
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Keranjang (Cart Pinjam)
     Route::get('/keranjang', [KeranjangController::class, 'index']);
     Route::post('/keranjang', [KeranjangController::class, 'store']);
     Route::delete('/keranjang/{keranjang}', [KeranjangController::class, 'destroy']);
-});
 
-
-/*
-|--------------------------------------------------------------------------
-| WISHLIST
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('auth:sanctum')->group(function () {
+    // Wishlist
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist', [WishlistController::class, 'store']);
     Route::delete('/wishlist/{wishlist}', [WishlistController::class, 'destroy']);
@@ -99,11 +94,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| PEMINJAMAN
+| PEMINJAMAN (MULTIPLE PINJAM, PENGEMBALIAN & EXPORT/IMPORT)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Export & Import Laporan Peminjaman
+    Route::get('/peminjaman/export', [PeminjamanController::class, 'export']);
+    Route::post('/peminjaman/import', [PeminjamanController::class, 'import']);
+    
+    // Multiple Pinjam (Checkout Keranjang)
+    Route::post('/peminjaman/checkout', [PeminjamanController::class, 'checkout']);
+    
+    // Pengembalian Buku & Hitung Denda
+    Route::post('/peminjaman/{peminjaman}/kembali', [PeminjamanController::class, 'kembalikan']);
+
+    // CRUD Standar Peminjaman
     Route::get('/peminjaman', [PeminjamanController::class, 'index']);
     Route::post('/peminjaman', [PeminjamanController::class, 'store']);
     Route::get('/peminjaman/{peminjaman}', [PeminjamanController::class, 'show']);
@@ -123,4 +129,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/denda/{denda}', [DendaController::class, 'show']);
     Route::post('/denda/{denda}/bayar', [DendaController::class, 'bayar']);
     Route::delete('/denda/{denda}', [DendaController::class, 'destroy']);
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| DAFTAR KUNJUNGAN (BUKU TAMU DIGITAL)
+|--------------------------------------------------------------------------
+*/
+
+// Form Kunjungan Publik (Bisa diisi tamu digital tanpa login)
+Route::post('/kunjungan', [KunjunganController::class, 'store']);
+
+// Manajemen Kunjungan untuk Admin
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/kunjungan', [KunjunganController::class, 'index']);
+    Route::delete('/kunjungan/{kunjungan}', [KunjunganController::class, 'destroy']);
 });

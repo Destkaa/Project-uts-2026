@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Str;
+use App\Models\Peminjaman;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Routing\Controllers\HasMiddleware;
-use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller implements HasMiddleware
 {
@@ -27,7 +27,20 @@ class ProfileController extends Controller implements HasMiddleware
         $user = Auth::user();
         $profile = $user->profile;
 
-        return view('profile.show', compact('user', 'profile'));
+        // 📝 Menambahkan History Peminjaman Buku milik user yang sedang login
+        $historyPeminjaman = Peminjaman::with(['buku', 'denda'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(5);
+
+        // Ringkasan statistik peminjaman user
+        $stats = [
+            'total_pinjam'       => Peminjaman::where('user_id', $user->id)->count(),
+            'sedang_dipinjam'    => Peminjaman::where('user_id', $user->id)->where('status', 'dipinjam')->count(),
+            'sudah_dikembalikan' => Peminjaman::where('user_id', $user->id)->where('status', 'dikembalikan')->count(),
+        ];
+
+        return view('profile.show', compact('user', 'profile', 'historyPeminjaman', 'stats'));
     }
 
     public function edit()
