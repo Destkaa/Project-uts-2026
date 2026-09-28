@@ -1,0 +1,82 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+import HomeView from '../views/HomeView.vue'
+import DetailBukuView from '../views/DetailBukuView.vue'
+import TentangView from '../views/TentangView.vue'
+import Dashboard from '../views/admin/Dashboard.vue'
+import BukuAdminView from '../views/admin/BukuAdminView.vue'
+import KategoriAdminView from '../views/admin/KategoriAdminView.vue'
+import PeminjamanAdminView from '../views/admin/PeminjamanAdminView.vue'
+import AnggotaAdminView from '../views/admin/AnggotaAdminView.vue'
+
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+
+const routes = [
+    {
+        path: '/',
+        name: 'home',
+        component: HomeView
+    },
+
+    {
+        path: '/buku/:id',
+        name: 'detail-buku',
+        component: DetailBukuView
+    },
+
+    {
+        path: '/tentang',
+        name: 'tentang',
+        component: TentangView
+    },
+
+    {
+        path: '/login',
+        name: 'login',
+        component: LoginView
+    },
+
+    {
+        path: '/register',
+        name: 'register',
+        component: RegisterView
+    },
+
+    {
+        path: '/admin/dashboard',
+        name: 'admin-dashboard',
+        component: Dashboard
+    },
+
+    {
+        path: '/admin/buku',
+        name: 'admin-buku',
+        component: BukuAdminView
+    },
+
+    {
+        path: '/admin/kategori',
+        name: 'admin-kategori',
+        component: KategoriAdminView
+    },
+
+    {
+        path: '/admin/peminjaman',
+        name: 'admin-peminjaman',
+        component: PeminjamanAdminView
+    },
+
+    {
+        path: '/admin/anggota',
+        name: 'admin-anggota',
+        component: AnggotaAdminView
+    }
+]
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes
+})
+
+export default router
