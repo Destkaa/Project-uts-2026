@@ -10,7 +10,12 @@ use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\PeminjamanController;
 use App\Http\Controllers\Api\DendaController;
 use App\Http\Controllers\Api\ProfileController;
+<<<<<<< HEAD
 use App\Http\Controllers\Api\KunjunganController;
+=======
+use App\Http\Controllers\Api\UserController;
+
+>>>>>>> ed4a556 (Update backend API and user controller)
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/denda/{denda}', [DendaController::class, 'destroy']);
 });
 
+<<<<<<< HEAD
 
 /*
 |--------------------------------------------------------------------------
@@ -145,4 +151,15 @@ Route::post('/kunjungan', [KunjunganController::class, 'store']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/kunjungan', [KunjunganController::class, 'index']);
     Route::delete('/kunjungan/{kunjungan}', [KunjunganController::class, 'destroy']);
+=======
+/*
+|--------------------------------------------------------------------------
+| ANGGOTA
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
+>>>>>>> ed4a556 (Update backend API and user controller)
 });

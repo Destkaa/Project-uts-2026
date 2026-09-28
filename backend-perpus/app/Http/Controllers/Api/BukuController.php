@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Buku;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BukuController extends Controller
 {
-    // GET SEMUA BUKU + SEARCH + FILTER
+    /**
+     * GET SEMUA BUKU
+     * Search + Filter kategori + Filter stok
+     */
     public function index(Request $request)
     {
-        $query = Buku::with(['kategori:id,nama']);
+        $query = Buku::with('kategori:id,nama');
 
         // Search judul atau penulis
         if ($request->filled('search')) {
@@ -23,17 +27,19 @@ class BukuController extends Controller
             });
         }
 
-        // Hanya buku yang stoknya tersedia
+        // Filter buku yang stoknya tersedia
         if ($request->filled('stok')) {
             $query->where('stok', '>', 0);
         }
 
-        // Filter kategori
+        // Filter berdasarkan kategori
         if ($request->filled('kategori_id')) {
             $query->where('kategori_id', $request->kategori_id);
         }
 
-        $buku = $query->latest()->paginate($request->input('per_page', 10));
+        $buku = $query
+            ->latest()
+            ->paginate($request->input('per_page', 10));
 
         return response()->json([
             'status'  => true,
@@ -42,7 +48,10 @@ class BukuController extends Controller
         ]);
     }
 
-    // POST TAMBAH BUKU
+
+    /**
+     * POST TAMBAH BUKU
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -51,8 +60,18 @@ class BukuController extends Controller
             'penulis'     => 'required|string|max:255',
             'stok'        => 'required|integer|min:0',
             'deskripsi'   => 'nullable|string',
-            'gambar'      => 'nullable|string',
+
+            // Upload gambar
+            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        /**
+         * Upload gambar jika ada
+         */
+        if ($request->hasFile('gambar')) {
+            $data['gambar'] = $request->file('gambar')
+                ->store('buku', 'public');
+        }
 
         $buku = Buku::create($data);
 
@@ -63,7 +82,10 @@ class BukuController extends Controller
         ], 201);
     }
 
-    // GET DETAIL BUKU
+
+    /**
+     * GET DETAIL BUKU
+     */
     public function show(Buku $buku)
     {
         return response()->json([
@@ -76,7 +98,10 @@ class BukuController extends Controller
         ]);
     }
 
-    // PUT UPDATE BUKU
+
+    /**
+     * PUT UPDATE BUKU
+     */
     public function update(Request $request, Buku $buku)
     {
         $data = $request->validate([
@@ -85,21 +110,51 @@ class BukuController extends Controller
             'penulis'     => 'sometimes|required|string|max:255',
             'stok'        => 'sometimes|required|integer|min:0',
             'deskripsi'   => 'nullable|string',
-            'gambar'      => 'nullable|string',
+
+            // Gambar baru
+            'gambar'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        /**
+         * Kalau upload gambar baru
+         */
+        if ($request->hasFile('gambar')) {
+
+            // Hapus gambar lama
+            if ($buku->gambar) {
+                Storage::disk('public')->delete($buku->gambar);
+            }
+
+            // Simpan gambar baru
+            $data['gambar'] = $request->file('gambar')
+                ->store('buku', 'public');
+        }
 
         $buku->update($data);
 
         return response()->json([
             'status'  => true,
             'message' => 'Buku berhasil diperbarui.',
-            'data'    => $buku->load('kategori:id,nama'),
+            'data'    => $buku->fresh()->load('kategori:id,nama'),
         ]);
     }
 
-    // DELETE BUKU
+
+    /**
+     * DELETE BUKU
+     */
     public function destroy(Buku $buku)
     {
+        /**
+         * Hapus file gambar jika ada
+         */
+        if ($buku->gambar) {
+            Storage::disk('public')->delete($buku->gambar);
+        }
+
+        /**
+         * Soft delete buku
+         */
         $buku->delete();
 
         return response()->json([
